@@ -1,0 +1,74 @@
+# limpiar_csv_simple.py
+# Objetivo: leer CSV "sucio", limpiar y guardar "limpio" con:
+# - timestamp en formato ISO YYYY-MM-DDTHH:MM:SS
+# - value como float con punto y 3 decimales
+# - separador de salida: coma
+# - filas inválidas: se saltan
+
+#para lectura de varios archivos se usa el For y tambien el comando *.csv
+import csv
+from datetime import datetime
+from pathlib import Path #importo el comando path (busca el lugar del codigo)
+
+
+#Path - ruta de acceso
+ROOT = Path(__file__).resolve().parents[2]  # sube desde src/ a la raíz del proyecto C:\Users\BP_motta\python_UTP\UTP_Py
+TXT  = ROOT / "Laboratorio1"
+IN_FILE=TXT / "datos"/ "raw"/ "datos_sucios_250_v2.csv" #archivo de Ingreso
+OUT_FILE=TXT / "datos"/ "proccesing"/ "datos_sucios_250_v2_limpio.csv" #archivo de Salida
+#apertura de archivos
+with open(IN_FILE,'r', encoding="utf-8", newline="") as fin,\
+     open(OUT_FILE, "w", encoding="utf-8", newline="") as fout:
+    reader = csv.DictReader(fin, delimiter=';')   #Lee todo lo que esta dentro del csv y que esta limitado por ";" (usa ',' si tu archivo lo requiere)
+    writer = csv.DictWriter(fout, fieldnames=["timestamp", "value", "T(C°)", "control"]) #crea el archivo y su cabecera
+    writer.writeheader()
+#leer linea por lineal y seleccionar en crudo raw 
+    total = kept = 0
+    empty_val = 0
+    for row in reader:
+        total += 1
+        ts_raw  = (row.get("timestamp") or "").strip()  #para obtener cada fila del timestap
+        val_raw = (row.get("value") or "").strip()  #para obtener cada fila del value
+        print(ts_raw)
+#limpiar datos
+        val_raw = val_raw.replace(",", ".")
+        val_low = val_raw.lower()
+        if val_low in {"", "na", "n/a", "nan", "null", "none", "error"}:
+            empty_val += 1
+            continue  # saltar fila
+        try:
+            val = float(val_raw)
+        except ValueError:
+            continue  # saltar fila si no es número
+        #Transformación de voltaje a temperatura
+        temp = 18*val-64
+        #Signos de alerta
+        if temp > 40:
+            control = "ALERTA"
+        else:
+            control = "OK"
+#limpieza de datos de tiempo 
+        ts_clean = None
+        for fmt in ("%Y-%m-%dT%H:%M:%S", "%d/%m/%Y %H:%M:%S"):
+            try:
+                dt = datetime.strptime(ts_raw, fmt)
+                ts_clean = dt.strftime("%Y-%m-%dT%H:%M:%S")
+                break
+            except ValueError:
+                pass
+#milisegundo (opcional)
+        #if ts_clean is None and "T" in ts_raw and len(ts_raw) >= 19:
+            #try:
+                #dt = datetime.strptime(ts_raw[:19], "%Y-%m-%dT%H:%M:%S")
+                #ts_clean = dt.strftime("%Y-%m-%dT%H:%M:%S")
+            #except ValueError:
+                #ts_clean = None
+
+        #if ts_clean is None:
+            #continue  # saltar fila si no pudimos interpretar la fecha
+
+#grabar datos en writer
+        writer.writerow({"timestamp": ts_clean, "value": f"{val:.2f}", "control": control, "T(C°)": f"{temp:.2f}"})
+        kept += 1 #sume 1 kept, en nuestro caso cambia de fila
+
+#print(f"Valores N/A encontrados: {empty_val}")
