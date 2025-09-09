@@ -15,12 +15,12 @@ from pathlib import Path #importo el comando path (busca el lugar del codigo)
 ROOT = Path(__file__).resolve().parents[2]  # sube desde src/ a la raíz del proyecto C:\Users\BP_motta\python_UTP\UTP_Py
 TXT  = ROOT / "Laboratorio1"
 IN_FILE=TXT / "datos"/ "raw"/ "datos_sucios_250_v2.csv" #archivo de Ingreso
-OUT_FILE=TXT / "datos"/ "proccesing"/ "datos_sucios_250_v2_limpio.csv" #archivo de Salida
+OUT_FILE=TXT / "datos"/ "proccesing"/ "Temperaturas_Procesado.csv" #archivo de Salida
 #apertura de archivos
 with open(IN_FILE,'r', encoding="utf-8", newline="") as fin,\
      open(OUT_FILE, "w", encoding="utf-8", newline="") as fout:
     reader = csv.DictReader(fin, delimiter=';')   #Lee todo lo que esta dentro del csv y que esta limitado por ";" (usa ',' si tu archivo lo requiere)
-    writer = csv.DictWriter(fout, fieldnames=["timestamp", "value", "T(C°)", "control"]) #crea el archivo y su cabecera
+    writer = csv.DictWriter(fout, fieldnames=["Timestamp", "Voltaje", "Temp_C", "Alertas"]) #crea el archivo y su cabecera
     writer.writeheader()
 #leer linea por lineal y seleccionar en crudo raw 
     total = kept = 0
@@ -29,7 +29,6 @@ with open(IN_FILE,'r', encoding="utf-8", newline="") as fin,\
         total += 1
         ts_raw  = (row.get("timestamp") or "").strip()  #para obtener cada fila del timestap
         val_raw = (row.get("value") or "").strip()  #para obtener cada fila del value
-        print(ts_raw)
 #limpiar datos
         val_raw = val_raw.replace(",", ".")
         val_low = val_raw.lower()
@@ -68,7 +67,7 @@ with open(IN_FILE,'r', encoding="utf-8", newline="") as fin,\
             #continue  # saltar fila si no pudimos interpretar la fecha
 
 #grabar datos en writer
-        writer.writerow({"timestamp": ts_clean, "value": f"{val:.2f}", "control": control, "T(C°)": f"{temp:.2f}"})
+        writer.writerow({"Timestamp": ts_clean, "Voltaje": f"{val:.2f}", "Alertas": control, "Temp_C": f"{temp:.2f}"})
         kept += 1 #sume 1 kept, en nuestro caso cambia de fila
 
 #print(f"Valores N/A encontrados: {empty_val}")
