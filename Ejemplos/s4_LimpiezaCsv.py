@@ -12,22 +12,22 @@ from pathlib import Path #importo el comando path (busca el lugar del codigo)
 
 
 #Path - ruta de acceso
-ROOT = Path(__file__).resolve().parents[0]  # sube desde src/ a la raíz del proyecto C:\Users\BP_motta\python_UTP\UTP_Py
-TXT  = ROOT / "archivos"
+ROOT = Path(__file__).resolve().parents[1]  # sube desde src/ a la raíz del proyecto C:\Users\BP_motta\python_UTP\UTP_Py
+TXT  = ROOT / "Archivos"
 IN_FILE=TXT / "voltajes_250_sucio.csv" #archivo de Ingreso
 OUT_FILE=TXT /"Volajes_250_limpio.csv" #archivo de Salida
 #apertura de archivos
 with open(IN_FILE,'r', encoding="utf-8", newline="") as fin,\
-    open(OUT_FILE, "w", encoding="utf-8", newline="") as fout:
-    reader = csv.DictReader(fin, delimiter=';')       # usa ',' si tu archivo lo requiere
-    writer = csv.DictWriter(fout, fieldnames=["timestamp", "value"]) #crea el archivo y su cabera
+     open(OUT_FILE, "w", encoding="utf-8", newline="") as fout:
+    reader = csv.DictReader(fin, delimiter=';')   #Lee todo lo que esta dentro del csv y que esta limitado por ";" (usa ',' si tu archivo lo requiere)
+    writer = csv.DictWriter(fout, fieldnames=["timestamp", "value"]) #crea el archivo y su cabecera
     writer.writeheader()
 #leer linea por lineal y seleccionar en crudo raw 
     total = kept = 0
     for row in reader:
         total += 1
-        ts_raw  = (row.get("timestamp") or "").strip()
-        val_raw = (row.get("value") or "").strip()
+        ts_raw  = (row.get("timestamp") or "").strip()  #para obtener cada fila del timestap
+        val_raw = (row.get("value") or "").strip()  #para obtener cada fila del value
 #limpiar datos
         val_raw = val_raw.replace(",", ".")
         val_low = val_raw.lower()
