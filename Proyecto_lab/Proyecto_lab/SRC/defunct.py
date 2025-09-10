@@ -1,25 +1,25 @@
 import csv
+from pathlib import Path
 from datetime import datetime
 from statistics import mean
 
-# -------------------
-# 1. Leer CSV
-# -------------------
-def leer_csv(in_file):
-    with open(in_file, 'r', encoding="utf-8", newline="") as fin:
+# rutas de entrada y salida
+ROOT = Path(__file__).resolve().parents[1]
+IN_FILE = ROOT / "DATA" / "RAW" / "voltajes_250_sucio.csv"
+OUT_FILE = ROOT / "DATA" / "PROCESSED" / "voltajes_250_sucio_limpio.csv"
+
+#Leer
+def leer_csv(IN_FILE):
+    with open(IN_FILE, 'r', encoding="utf-8", newline="") as fin:
         reader = csv.DictReader(fin, delimiter=';')
         return list(reader)
 
-
-# -------------------
-# 2. Limpiar datos
-# -------------------
+#Limpiar datos
 def limpiar_datos(rows):
     voltajes = []
     datos_limpios = []
     total = kept = 0
-    bad_ts = bad_val = 0
-
+    bad_ts = empty_val = 0
     for row in rows:
         total += 1
         ts_raw = (row.get("timestamp") or "").strip()
@@ -29,12 +29,12 @@ def limpiar_datos(rows):
         val_raw = val_raw.replace(",", ".")
         val_low = val_raw.lower()
         if val_low in {"", "na", "n/a", "nan", "null", "none", "error"}:
-            bad_val += 1
+            empty_val += 1
             continue
         try:
             val = float(val_raw)
         except ValueError:
-            bad_val += 1
+            empty_val += 1
             continue
 
         # limpiar timestamp
@@ -59,43 +59,34 @@ def limpiar_datos(rows):
             continue
 
         voltajes.append(val)
-        datos_limpios.append({"Timestap": ts_clean, "Voltaje": val})
+        datos_limpios.append({"Timestamp": ts_clean, "Voltaje": val})
         kept += 1
+    return voltajes, datos_limpios, total, kept, bad_ts, empty_val
 
-    return voltajes, datos_limpios, total, kept, bad_ts, bad_val
-
-
-# -------------------
-# 3. Conversión V → °C
-# -------------------
+# Convertir
 def convertir_temp(datos_limpios):
     for row in datos_limpios:
-        v = row["Voltaje"]
-        row["Temp_C"] = 18 * v - 64
+        row["Temp_C"] = 18 * row["Voltaje"] - 64
     return datos_limpios
 
-
-# -------------------
-# 4. Marcar alertas (> 40 °C)
-# -------------------
+# Marcar alertas 
 def marcar_alertas(datos_limpios):
     for row in datos_limpios:
-        row["Control"] = "ALERTA" if row["Temp_C"] > 40 else "OK"
+        if row["Temp_C"] > 40:
+            row["Alertas"] = "ALERTA"
+        else:
+            row["Alertas"] = "OK"
     return datos_limpios
 
-
-# -------------------
-# 5. Calcular KPIs
-# -------------------
-def calcular_kpis(voltajes, total, kept, bad_ts, bad_val, datos_limpios):
+# Calcular KPIs
+def calcular_kpis(voltajes, total, kept, bad_ts, empty_val, datos_limpios):
     n = len(voltajes)
-
     if n == 0:
         kpis = {
             "Filas_totales": total,
             "Filas_validas": kept,
             "Descartes_Timestamp": bad_ts,
-            "Descartes_valor": bad_val,
+            "Descartes_valor": empty_val,
             "n": 0,
             "temp_min": None,
             "temp_max": None,
@@ -109,29 +100,25 @@ def calcular_kpis(voltajes, total, kept, bad_ts, bad_val, datos_limpios):
             "Filas_totales": total,
             "Filas_validas": kept,
             "Descartes_Timestamp": bad_ts,
-            "Descartes_valor": bad_val,
+            "Descartes_valor": empty_val,
             "n": n,
             "temp_min": min(temps),
             "temp_max": max(temps),
             "temp_prom": mean(temps),
             "Alertas": alertas
         }
-
     return kpis
 
-
-# -------------------
 # 6. Guardar CSV final
-# -------------------
-def guardar_csv(out_file, datos_limpios):
-    with open(out_file, 'w', encoding="utf-8", newline="") as fout:
-        fieldnames = ["Timestap", "Voltaje", "Temp_C", "Control"]
-        writer = csv.DictWriter(fout, fieldnames=fieldnames)
+def guardar_csv(OUT_FILE, datos_limpios):
+    with open(OUT_FILE, 'w', encoding="utf-8", newline="") as fout:
+        encabezado = ["Timestamp", "Voltaje", "Temp_C", "Alertas"]
+        writer = csv.DictWriter(fout, fieldnames=encabezado)
         writer.writeheader()
         for row in datos_limpios:
             writer.writerow({
-                "Timestap": row["Timestap"],
-                "Voltaje": f"{row['Voltaje']:.2f}",
-                "Temp_C": f"{row['Temp_C']:.2f}",
-                "Control": row["Control"],
+                "Timestamp": row["Timestamp"], 
+                "Voltaje": f"{row['Voltaje']:.2f}", 
+                "Temp_C": f"{row['Temp_C']:.2f}", 
+                "Alertas": row["Alertas"],
             })
