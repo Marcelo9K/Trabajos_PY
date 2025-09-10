@@ -9,7 +9,7 @@
 import csv
 from datetime import datetime
 from pathlib import Path #importo el comando path (busca el lugar del codigo)
-
+from statistics import mean
 
 #Path - ruta de acceso
 ROOT = Path(__file__).resolve().parents[2]  # sube desde src/ a la raíz del proyecto C:\Users\BP_motta\python_UTP\UTP_Py
@@ -24,7 +24,9 @@ with open(IN_FILE,'r', encoding="utf-8", newline="") as fin,\
     writer.writeheader()
 #leer linea por lineal y seleccionar en crudo raw 
     total = kept = 0
-    empty_val = 0
+    empty_val = bad_ts = 0
+    voltajes=[]
+    temperaturas=[]
     for row in reader:
         total += 1
         ts_raw  = (row.get("timestamp") or "").strip()  #para obtener cada fila del timestap
@@ -38,14 +40,9 @@ with open(IN_FILE,'r', encoding="utf-8", newline="") as fin,\
         try:
             val = float(val_raw)
         except ValueError:
+            empty_val += 1
             continue  # saltar fila si no es número
-        #Transformación de voltaje a temperatura
-        temp = 18*val-64
-        #Signos de alerta
-        if temp > 40:
-            control = "ALERTA"
-        else:
-            control = "OK"
+
 #limpieza de datos de tiempo 
         ts_clean = None
         for fmt in ("%Y-%m-%dT%H:%M:%S", "%d/%m/%Y %H:%M:%S"):
@@ -56,18 +53,56 @@ with open(IN_FILE,'r', encoding="utf-8", newline="") as fin,\
             except ValueError:
                 pass
 #milisegundo (opcional)
-        #if ts_clean is None and "T" in ts_raw and len(ts_raw) >= 19:
-            #try:
-                #dt = datetime.strptime(ts_raw[:19], "%Y-%m-%dT%H:%M:%S")
-                #ts_clean = dt.strftime("%Y-%m-%dT%H:%M:%S")
-            #except ValueError:
-                #ts_clean = None
+        if ts_clean is None and "T" in ts_raw and len(ts_raw) >= 19:
+            try:
+                dt = datetime.strptime(ts_raw[:19], "%Y-%m-%dT%H:%M:%S")
+                ts_clean = dt.strftime("%Y-%m-%dT%H:%M:%S")
+            except ValueError:
+                ts_clean = None
 
-        #if ts_clean is None:
-            #continue  # saltar fila si no pudimos interpretar la fecha
+        if ts_clean is None:
+            bad_ts += 1
+            continue  # saltar fila si no pudimos interpretar la fecha
+
+        #Transformación de voltaje a temperatura
+        temp = 18*val-64
+        #Signos de alerta
+        if temp > 40:
+            control = "ALERTA"
+        else:
+            control = "OK"
+        voltajes.append(val)
+        temperaturas.append(temp)
+        
 
 #grabar datos en writer
         writer.writerow({"Timestamp": ts_clean, "Voltaje": f"{val:.2f}", "Alertas": control, "Temp_C": f"{temp:.2f}"})
         kept += 1 #sume 1 kept, en nuestro caso cambia de fila
 
 #print(f"Valores N/A encontrados: {empty_val}")
+
+#librería
+#KPIs
+n=len(voltajes)
+if n==0:
+    kips={"n": 0, "min": None, "max": None, "prom": None, "alerts": 0, "alerts_pct": 0.0} # por facilidad usaremos diccionarios
+else:
+    alertas=sum(temp > 40 for temp in temperaturas)
+    kips={
+        "n": n,
+        "min": min(temperaturas),
+        "max": max(temperaturas),
+        "prom":mean(temperaturas),
+        "alerts": alertas,
+    }
+
+kpis_calidad = {
+    "filas_totales": total,
+    "filas_validas": kept,
+    "descartes_timestamp": bad_ts,
+    "descartes_valor": empty_val,
+}
+
+#print(kips)
+#print(kpis_calidad)
+print(f"De un total de {int(kips['n'])} datos, los valores máximo y mínimo son: {kips['max']:.2f}°C,{kips['min']:.2f}°C")
