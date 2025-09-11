@@ -22,12 +22,10 @@ def main():
     # impresión final de KPIs
     print("=== KPIs ===")
     for k, v in kpis.items():
-        if isinstance(v, float):
+        if isinstance(v, float):    # isinstance() pregunta si la variable es de tipo float
             print(f"{k}: {v:.2f}")
         else:
             print(f"{k}: {v}")
-
-#El def main necesita llamar las rutas del defunct para así funcionar
 
 if __name__ == "__main__":
     main()

@@ -5,31 +5,32 @@ from statistics import mean
 
 # rutas de entrada y salida
 ROOT = Path(__file__).resolve().parents[1]
-IN_FILE = ROOT / "DATA" / "RAW" / "voltajes_250_sucio.csv"
-OUT_FILE = ROOT / "DATA" / "PROCESSED" / "voltajes_250_sucio_limpio.csv"
+IN_FILE = ROOT / "DATA" / "RAW" / "datos_sucios_250_v2.csv"
+OUT_FILE = ROOT / "DATA" / "PROCESSED" / "Temperaturas_Procesado.csv"
 
 #Leer
 def leer_csv(IN_FILE):
-    with open(IN_FILE, 'r', encoding="utf-8", newline="") as fin:
+    with open(IN_FILE, 'r', encoding="utf-8", newline="") as fin:   #comando para la apertura de datos
         reader = csv.DictReader(fin, delimiter=';')
         return list(reader)
 
 #Limpiar datos
 def limpiar_datos(rows):
-    voltajes = []
-    datos_limpios = []
-    total = kept = 0
-    bad_ts = empty_val = 0
+    voltajes = []       #creamos la lista de voltajes
+    datos_limpios = []      #creamos otra lista de datos limpios
+    total = kept = 0        # total = total de líneas | kept = líneas válidas
+    bad_ts = empty_val = 0      # bad_ts = timestamps descartados | empty_val = voltajes descartados
+
     for row in rows:
         total += 1
-        ts_raw = (row.get("timestamp") or "").strip()
+        ts_raw = (row.get("timestamp") or "").strip()   #aplicamos row.get() para obtener cada fila del csv sucio
         val_raw = (row.get("value") or "").strip()
 
         # limpiar valor
         val_raw = val_raw.replace(",", ".")
         val_low = val_raw.lower()
         if val_low in {"", "na", "n/a", "nan", "null", "none", "error"}:
-            empty_val += 1
+            empty_val += 1      #por cada dato inválido, se suma a esta variable
             continue
         try:
             val = float(val_raw)
@@ -58,8 +59,10 @@ def limpiar_datos(rows):
         if ts_clean is None:
             continue
 
-        voltajes.append(val)
-        datos_limpios.append({"Timestamp": ts_clean, "Voltaje": val})
+        # Se guardan los datos en la lista "voltajes"
+        voltajes.append(val)    
+        # Se guardan los datos de voltaje y tiempo en los datos
+        datos_limpios.append({"Timestamp": ts_clean, "Voltaje": val})   
         kept += 1
     return voltajes, datos_limpios, total, kept, bad_ts, empty_val
 
