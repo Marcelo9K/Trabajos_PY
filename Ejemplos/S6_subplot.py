@@ -46,8 +46,9 @@ axs[1].plot(ejex,ejey2,'r',label="Inversa del seno")
 axs[1].set_title("Arcocoseno")
 
 
-plt.show()
 plt.savefig('salidapng')
+plt.show()
+
 
 
 
