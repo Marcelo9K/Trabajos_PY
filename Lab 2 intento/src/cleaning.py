@@ -38,7 +38,7 @@ def clean_file(in_path: Path, out_path: Path, ts_col="timestamp", v_col_candidat
     Devuelve: (ts_list, volts_list, stats_dict)
     """
     delim = detectar_delimitador(in_path)
-    ts_list, volts_list, temps = [], [], []
+    ts_list, volts_list, temps, temp_K = [], [], [], []
     total = kept = bad_ts = bad_val = 0
 
     with in_path.open("r", encoding="utf-8", newline="") as fin, \
@@ -63,7 +63,9 @@ def clean_file(in_path: Path, out_path: Path, ts_col="timestamp", v_col_candidat
             if v is None:
                 bad_val += 1; continue
 
-            temp = -30 + (120 - (-30)) * (v - 0.4) / (5.6 - 0.4)    #falta configurar
+            temp_K = 243.15 + (393.15 - 243.15) * (v - 0.4) / (5.6 - 0.4)    #falta configurar
+            temp = temp_K - 273.15            
+
             writer.writerow({
                 "timestamp": t.strftime("%Y-%m-%dT%H:%M:%S"),
                 "voltage_V": f"{v:.3f}",
