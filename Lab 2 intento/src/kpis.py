@@ -9,9 +9,9 @@ def kpis_volt(temp, umbral=80.0):
     alerts = sum(v > umbral for v in temp)
     return {
         "n": n,
-        "min": min(temp),
-        "max": max(temp),
-        "prom": mean(temp),
+        "min": round(min(temp), 2),
+        "max": round(max(temp), 2),
+        "prom": round(mean(temp), 2),
         "alerts": alerts,
-        "alerts_pct": 100.0 * alerts / n
+        "alerts_pct": round(100.0 * alerts / n, 2)
     }
