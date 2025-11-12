@@ -38,7 +38,7 @@ def make_clean_name(p:Path) -> str:
     """
     nombre=p.stem
     if "sucio" in nombre:
-        nombre = nombre.replace("sucios", "limpios").replace("sucio", "limpio").replace("humedad","temperatura")
+        nombre = nombre.replace("sucios", "limpios").replace("sucio", "limpio")
     else:
         nombre = f"{nombre}_limpio"
     return f"{nombre}.csv"
