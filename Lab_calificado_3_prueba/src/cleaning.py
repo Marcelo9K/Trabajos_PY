@@ -20,9 +20,9 @@ def parse_v(s: str):
 
 def clean_file(in_path: Path, out_path: Path):
     """
-   Lee un CSV crudo de humedad, limpia y escribe un CSV con encabezado:
+    Lee un CSV crudo de humedad, limpia y escribe un CSV con encabezado:
     ts_ms, humedad, humedad_avg, estado
-    Devuelve: (ts_list, humedades, promedios, stats_dict)
+    Devuelve: (ts_list, humedades, promedios, stats)
     """
     delim = detectar_delimitador(in_path)
     total = kept = bad_val = bad_avg = 0

@@ -75,7 +75,7 @@ def main():
         w.writeheader()
         for row in resumen_kpis:
             w.writerow(row)
-    print("✅ Reporte KPIs generado en:", rep_csv)
+    print("Reporte KPIs generado en:", rep_csv)
 
 
 if __name__ == "__main__":
