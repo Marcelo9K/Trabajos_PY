@@ -14,18 +14,18 @@ t = np.arange(0, duracion, 1/fs)
 # 2. FUNCIÓN x(t) DEL INFORME (PACIENTE 21 - FP1-F7)
 # ============================================
 
-def x_paciente21_FP1F7(t):
-    x = (45*np.sin(2*np.pi*10*t) +
-         20*np.sin(2*np.pi*20*t) +
-         np.random.normal(0, 1, len(t)))  # ruido
-    return x
-
 #def x_paciente21_FP1F7(t):
-    x = (110*np.sin(2*np.pi*3*t + 0.7) +
-         90*np.sin(2*np.pi*5*t + 1.1) +
-         75*np.sin(2*np.pi*7*t + 1.8) +
-         60*np.sin(2*np.pi*12*t - 0.9) +
-         40*np.sin(2*np.pi*18*t + 0.5) +
+    #x = (45*np.sin(2*np.pi*10*t) +
+         #20*np.sin(2*np.pi*20*t) +
+         #np.random.normal(0, 1, len(t)))  # ruido
+    #return x
+
+def x_paciente21_FP1F7(t):
+    x = (130*np.sin(2*np.pi*3*t + 0.4) +
+         95*np.sin(2*np.pi*6*t - 1.1) +
+         78*np.sin(2*np.pi*9*t + 0.9) +
+         60*np.sin(2*np.pi*14*t - 0.3) +
+         40*np.sin(2*np.pi*18*t + 1.7) +
          np.random.normal(0, 1, len(t)))  # ruido
     return x
 
